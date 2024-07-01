@@ -89,6 +89,7 @@ function getVideoIds() {
   const videos = document.querySelectorAll(
     "ytd-video-renderer:not(.lang-flagged), ytd-rich-item-renderer:not(.lang-flagged)"
   );
+  let finalVideos = [];
   let videoIds = [];
 
   videos.forEach((thumbnail) => {
@@ -96,21 +97,20 @@ function getVideoIds() {
     if (thumbnailLink) {
       const href = thumbnailLink.getAttribute("href");
       const videoId = extractVideoId(href);
-      videoIds.push(videoId);
+      if (videoId) {
+        finalVideos.push(thumbnail);
+        videoIds.push(videoId);
+      }
     }
   });
 
-  return { videos, videoIds };
+  return { videos: finalVideos, videoIds };
 }
 
 // FIND LANGUAGES
 async function getDefaultLanguages(videoIds) {
-  try {
-    const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoIds.join(
-        ","
-      )}&key=${apiKey}`
-    );
+  try {      
+    const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoIds.join(",")}&key=${apiKey}`);
     const data = await response.json();
     return data.items.map((item) =>
       item.snippet.defaultAudioLanguage?.substring(0, 2)
